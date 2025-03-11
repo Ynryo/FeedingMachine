@@ -8,6 +8,10 @@
 
 const char *ssid = "Bbox-46B658CE";
 const char *password = "vwHy7x72tJUHpjZUXz";
+const char *wifi[3][2] = {
+    {"Bbox-46B658CE", "vwHy7x72tJUHpjZUXz"},
+    {"Ewen's Pixel 7 Pro", "SecurePassword"},
+    {"Livebox-3BC0", "NsJivtfcgnjjLReuqb"}};
 // const char *ssid = "Ewen's Pixel 7 Pro"; //partco
 // const char *password = "SecurePassword";
 // const char *ssid = "Livebox-3BC0"; //thomas
@@ -98,6 +102,24 @@ void ledsShow(int mode, int h, int b) // mode normal and blinking (1 , 2)
     break;
   }
   yield();
+}
+
+void wifiNetworkResearcher()
+{ // module wifi
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print("\nConnexion en cours");
+    int timeSpend = 0;
+    for (int i = 0; i < 3; i++)
+    {
+      WiFi.begin(wifi[i][0], wifi[i][1]);
+      while (WiFi.status() != WL_CONNECTED || timeSpend == 10)
+      {
+        ledsShow(2, 245, 50);
+        Serial.print(".");
+      }
+    }
+  }
 }
 
 void setup()
