@@ -1,27 +1,18 @@
 #include <Arduino.h>
-#include <Stepper.h>
-#include <NTPClient.h>
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
 #include <FastLED.h>
-// #include "functions.h"
+#include <NTPClient.h>
+#include <Stepper.h>
+#include <WiFiUdp.h>
 
-const char *ssid = "Bbox-46B658CE";
-const char *password = "vwHy7x72tJUHpjZUXz";
-const char *wifi[3][2] = {
-    {"Bbox-46B658CE", "vwHy7x72tJUHpjZUXz"},
-    {"Ewen's Pixel 7 Pro", "SecurePassword"},
-    {"Livebox-3BC0", "NsJivtfcgnjjLReuqb"}};
-// const char *ssid = "Ewen's Pixel 7 Pro"; //partco
-// const char *password = "SecurePassword";
-// const char *ssid = "Livebox-3BC0"; //thomas
-// const char *password = "NsJivtfcgnjjLReuqb";
+#include "credentials.h"
+
 
 const long utcOffsetInSeconds = 3600; // décalage horaire
 const int dropHour = 19;
 const int dropMinute = 0;
 const int dropSecond = 0;
-const int foodSlots = 16; // 16 emplacements de bouffe à l'allumage
+const int foodSlots = 16; // 16 emplacements de miamiam à l'allumage
 const int numled = 20;
 const int steps = 2048;
 int brightness = 50;
@@ -33,18 +24,13 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 Stepper moteur(steps, 14, 5, 13, 4);
 CRGB leds[numled];
 
-int bright360to255(int val)
-{
-  return static_cast<int>((val / 360.0) * 255);
-}
+int bright360to255(int val) { return static_cast<int>((val / 360.0) * 255); }
 
 void ledsShow(int mode) // mode off and aqua (0, 3)
 {
-  switch (mode)
-  {
+  switch (mode) {
   case 0:
-    for (int i = 0; i <= numled - 1; i++)
-    {
+    for (int i = 0; i <= numled - 1; i++) {
       ledHues[i] = bright360to255(0); // Enregistrer la teinte
       leds[i].setHSV(ledHues[i], 0, 0);
       FastLED.show();
@@ -58,9 +44,7 @@ void ledsShow(int mode) // mode off and aqua (0, 3)
       if (tempHue > 156) // hue regulator
       {
         tempHue = 140;
-      }
-      else if (tempHue < 106)
-      {
+      } else if (tempHue < 106) {
         tempHue = 120;
       }
       leds[i].setHSV(tempHue, 255, brightness);
@@ -80,11 +64,9 @@ void ledsShow(int mode) // mode off and aqua (0, 3)
 
 void ledsShow(int mode, int h, int b) // mode normal and blinking (1 , 2)
 {
-  switch (mode)
-  {
+  switch (mode) {
   case 1: // normal
-    for (int i = 0; i <= numled - 1; i++)
-    {
+    for (int i = 0; i <= numled - 1; i++) {
       ledHues[i] = bright360to255(h); // Enregistrer la teinte
       leds[i].setHSV(ledHues[i], 255, b);
       FastLED.show();
@@ -104,17 +86,13 @@ void ledsShow(int mode, int h, int b) // mode normal and blinking (1 , 2)
   yield();
 }
 
-void wifiNetworkResearcher()
-{ // module wifi
-  if (WiFi.status() != WL_CONNECTED)
-  {
+void wifiNetworkResearcher() { // module wifi
+  if (WiFi.status() != WL_CONNECTED) {
     Serial.print("\nConnexion en cours");
     int timeSpend = 0;
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
       WiFi.begin(wifi[i][0], wifi[i][1]);
-      while (WiFi.status() != WL_CONNECTED || timeSpend == 10)
-      {
+      while (WiFi.status() != WL_CONNECTED || timeSpend == 10) {
         ledsShow(2, 245, 50);
         Serial.print(".");
       }
@@ -122,14 +100,12 @@ void wifiNetworkResearcher()
   }
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(9600);
   FastLED.addLeds<NEOPIXEL, 12>(leds, numled);
   WiFi.begin(ssid, password);
   Serial.print("\nConnexion");
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     ledsShow(2, 245, 50);
     Serial.print(".");
   }
@@ -151,24 +127,17 @@ void setup()
   ledsShow(1, 180, brightness);
 }
 
-void loop()
-{
+void loop() {
   timeClient.update();
   // set brightness
-  if (timeClient.getHours() < 22 && timeClient.getHours() >= 7)
-  {
+  if (timeClient.getHours() < 22 && timeClient.getHours() >= 7) {
     brightness = 75; // jour
-  }
-  else
-  {
+  } else {
     brightness = 25; // nuit
   }
-  if (foodRemaining > 0)
-  {
+  if (foodRemaining > 0) {
     ledsShow(3);
-  }
-  else
-  {
+  } else {
     ledsShow(2, 0, brightness);
   }
   if (timeClient.getHours() == dropHour &&
@@ -177,8 +146,7 @@ void loop()
   // if (timeClient.getSeconds() % 5 == 0) // only for tests
   {
     moteur.step(steps / foodSlots);
-    if (foodRemaining > 0)
-    {
+    if (foodRemaining > 0) {
       foodRemaining--;
     }
     Serial.println("C'est le moment de manger");
